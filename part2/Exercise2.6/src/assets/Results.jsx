@@ -1,4 +1,6 @@
-const Results = ({ persons, newSearch }) => {
+import Removebutton from "./Remove.jsx"
+ 
+const Results = ({ persons, newSearch, deletePerson }) => {
 
   const filteredPersons = persons.filter(person =>
     person.name.toLowerCase().includes(newSearch.toLowerCase())
@@ -7,8 +9,8 @@ const Results = ({ persons, newSearch }) => {
   return (
     <div>
       {filteredPersons.map((p, i) => (
-        <div key={i}>
-          {p.name} {p.number}
+        <div key={p.id}>
+          {p.name} {p.number} <Removebutton id={p.id} deletePerson={deletePerson}/>
         </div>
       ))}
     </div>
