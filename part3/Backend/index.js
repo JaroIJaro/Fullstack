@@ -54,6 +54,19 @@ app.delete('/api/notes/:id', (request, response) => {
   response.status(204).end()
 })
 
+app.patch('/api/notes/:id', (request, response) => {
+  const id = request.params.id
+  const note = request.body
+  const noteIndex = notes.findIndex(n => n.id === id)
+  
+  if (noteIndex === -1) {
+    return response.status(404).json({ error: 'note not found' })
+  }
+  
+  notes[noteIndex] = { ...notes[noteIndex], ...note }
+  response.json(notes[noteIndex])
+})
+
 app.get('/api/notes', (request, response) => {
   response.json(notes)
 })
@@ -87,7 +100,7 @@ app.post('/api/notes', (request, response) => {
   notes.push(note)
   response.json(note)})
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })

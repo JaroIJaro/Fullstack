@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const baseUrl =  'https://fullstack-vv86.onrender.com/api/notes'
+const baseUrl = import.meta.env.VITE_API_URL || '/api/notes'
 
 
 const getAll = () => {
