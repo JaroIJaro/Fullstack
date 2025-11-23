@@ -103,12 +103,17 @@ app.post('/api/notes', (request, response) => {
 
 // Catch-all handler: send back React's index.html file for client-side routing
 // This should be last, after all API routes and static file serving
-app.get('*', (request, response) => {
-  // Only handle non-API routes
-  if (!request.path.startsWith('/api')) {
+// Use a middleware function instead of wildcard route for Express 5 compatibility
+app.use((request, response, next) => {
+  // Skip if it's an API route
+  if (request.path.startsWith('/api')) {
+    return next()
+  }
+  // For all other GET requests, serve index.html for SPA routing
+  if (request.method === 'GET') {
     response.sendFile(path.join(__dirname, 'dist', 'index.html'))
   } else {
-    response.status(404).end()
+    next()
   }
 })
 
