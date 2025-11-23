@@ -1,4 +1,5 @@
 const express = require('express')
+const path = require('path')
 const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
@@ -99,6 +100,17 @@ app.post('/api/notes', (request, response) => {
     note.id = String(Math.floor(Math.random()*100))
   notes.push(note)
   response.json(note)})
+
+// Catch-all handler: send back React's index.html file for client-side routing
+// This should be last, after all API routes and static file serving
+app.get('*', (request, response) => {
+  // Only handle non-API routes
+  if (!request.path.startsWith('/api')) {
+    response.sendFile(path.join(__dirname, 'dist', 'index.html'))
+  } else {
+    response.status(404).end()
+  }
+})
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {

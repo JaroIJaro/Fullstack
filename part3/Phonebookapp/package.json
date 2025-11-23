@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "server": "json-server -p 3001 db.json",
     "start": "vite preview",
-    "build:ui": "rm -rf dist && cd ../frontend && npm run build && cp -r dist ../backend",
+    "build:ui": "npm run build && cp -r dist ../Backend/dist",
     "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push"
   },
   "dependencies": {
