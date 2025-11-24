@@ -6,6 +6,7 @@ const cors = require('cors')
 app.use(cors())
 require('dotenv').config()
 const Note = require('./models/note')
+const { error } = require('console')
 
 
 morgan.token('body', (req) => {
@@ -36,14 +37,6 @@ app.get('/api/notes/:id', (request, response, next) => {
 app.post('/api/notes', (request, response, next) => {
   const { name, number } = request.body
 
-  if (!name) {
-    return response.status(400).json({ error: 'name is missing' })
-  }
-
-  if (!number) {
-    return response.status(400).json({ error: 'number is missing' })
-  }
-
   Note.findOne({ name })
     .then((existing) => {
       if (existing) {
@@ -58,7 +51,7 @@ app.post('/api/notes', (request, response, next) => {
         response.status(201).json(savedNote)
       }
     })
-    .catch(next)
+    .catch(error => next(error))
 })
 
 app.patch('/api/notes/:id', (request, response, next) => {
