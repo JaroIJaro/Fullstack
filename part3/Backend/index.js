@@ -47,10 +47,10 @@ app.patch('/api/notes/:id', (request, response) => {
   response.json(notes[noteIndex])
 })
 
-app.get('/api/notes', (request, response) => {
-  Note.findById(request.params.id).then(note => {
-    response.json(note)
-  })
+app.get('/api/notes', (req, res, next) => {
+  Note.find({})
+    .then(notes => res.json(notes))
+    .catch(next)
 })
 
 app.get('/api/info', (request, response) => {
