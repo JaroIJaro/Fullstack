@@ -4,30 +4,9 @@ const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
 app.use(cors())
+require('dotenv').config()
+const Note = require('./models/note')
 
-
-let notes = [
-    { 
-      "id": "1",
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": "2",
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": "3",
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": "4",
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    }
-]
 
 morgan.token('body', (req) => {
   return JSON.stringify(req.body)
@@ -69,7 +48,9 @@ app.patch('/api/notes/:id', (request, response) => {
 })
 
 app.get('/api/notes', (request, response) => {
-  response.json(notes)
+  Note.findById(request.params.id).then(note => {
+    response.json(note)
+  })
 })
 
 app.get('/api/info', (request, response) => {
@@ -78,28 +59,39 @@ app.get('/api/info', (request, response) => {
 })
 
 app.post('/api/notes', (request, response) => {
-    const note = request.body
+    const body = request.body
 
-    if (!note.name) {
+    if (!body.name) {
     return response.status(400).json({ 
       error: 'name is missing' 
     })
   }
 
-  if (!note.number) {
+  if (!body.number) {
     return response.status(400).json({ 
       error: 'number is missing' 
     })
   }
-   const nameExists = notes.some(entry => entry.name === note.name)
+   const nameExists = body.some(entry => entry.name === body.name)
   if (nameExists) {
     return response.status(400).json({ 
       error: 'name must be unique' 
     })
   }
-    note.id = String(Math.floor(Math.random()*100))
-  notes.push(note)
-  response.json(note)})
+    body.id = String(Math.floor(Math.random()*100))
+  notes.push(body)
+  response.json(body)
+
+
+  const note = new Note({
+  name: process.argv[3],
+  number: process.argv[4],
+})
+
+    note.save().then(savedNote => {
+    response.json(savedNote)
+  })
+})
 
 // Catch-all handler: send back React's index.html file for client-side routing
 // This should be last, after all API routes and static file serving
@@ -117,7 +109,7 @@ app.use((request, response, next) => {
   }
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
