@@ -23,7 +23,7 @@ app.get('/api/notes/:id', (request, response) => {
     if (note) {
           response.json(note)  
         } else {
-          response.status(204).end()
+          response.status(404).end()
 }
 })
 
@@ -31,7 +31,7 @@ app.delete('/api/notes/:id', (request, response) => {
   const id = request.params.id
   notes = notes.filter(note => note.id !== id)
 
-  response.status(204).end()
+  response.status(404).end()
 })
 
 app.patch('/api/notes/:id', (request, response) => {
