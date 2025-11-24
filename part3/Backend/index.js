@@ -16,92 +16,96 @@ app.use(express.json())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 app.use(express.static('dist'))
 
-
-app.get('/api/notes/:id', (request, response) => {
-  const id = request.params.id
-  const note = notes.find(note => note.id === id)
-    if (note) {
-          response.json(note)  
-        } else {
-          response.status(404).end()
-}
-})
-
-app.delete('/api/notes/:id', (request, response) => {
-  const id = request.params.id
-  notes = notes.filter(note => note.id !== id)
-
-  response.status(404).end()
-})
-
-app.patch('/api/notes/:id', (request, response) => {
-  const id = request.params.id
-  const note = request.body
-  const noteIndex = notes.findIndex(n => n.id === id)
-  
-  if (noteIndex === -1) {
-    return response.status(404).json({ error: 'note not found' })
-  }
-  
-  notes[noteIndex] = { ...notes[noteIndex], ...note }
-  response.json(notes[noteIndex])
-})
-
-app.get('/api/notes', (req, res, next) => {
+app.get('/api/notes', (request, response, next) => {
   Note.find({})
-    .then(notes => res.json(notes))
+    .then((notes) => response.json(notes))
     .catch(next)
 })
 
-app.get('/api/info', (request, response) => {
-  response.json( ` Phonebook has info for ${notes.length} people
-     ${new Date()}`  )
+app.get('/api/notes/:id', (request, response, next) => {
+  Note.findById(request.params.id)
+    .then((note) => {
+      if (!note) {
+        return response.status(404).end()
+      }
+      response.json(note)
+    })
+    .catch(next)
 })
 
-app.post('/api/notes', (request, response) => {
-    const body = request.body
+app.post('/api/notes', (request, response, next) => {
+  const { name, number } = request.body
 
-    if (!body.name) {
-    return response.status(400).json({ 
-      error: 'name is missing' 
-    })
+  if (!name) {
+    return response.status(400).json({ error: 'name is missing' })
   }
 
-  if (!body.number) {
-    return response.status(400).json({ 
-      error: 'number is missing' 
-    })
+  if (!number) {
+    return response.status(400).json({ error: 'number is missing' })
   }
-   const nameExists = body.some(entry => entry.name === body.name)
-  if (nameExists) {
-    return response.status(400).json({ 
-      error: 'name must be unique' 
+
+  Note.findOne({ name })
+    .then((existing) => {
+      if (existing) {
+        return response.status(400).json({ error: 'name must be unique' })
+      }
+
+      const note = new Note({ name, number })
+      return note.save()
     })
-  }
-    body.id = String(Math.floor(Math.random()*100))
-  notes.push(body)
-  response.json(body)
-
-
-  const note = new Note({
-  name: process.argv[3],
-  number: process.argv[4],
+    .then((savedNote) => {
+      if (savedNote) {
+        response.status(201).json(savedNote)
+      }
+    })
+    .catch(next)
 })
 
-    note.save().then(savedNote => {
-    response.json(savedNote)
+app.patch('/api/notes/:id', (request, response, next) => {
+  const { name, number } = request.body
+  const update = {}
+
+  if (name !== undefined) update.name = name
+  if (number !== undefined) update.number = number
+
+  Note.findByIdAndUpdate(request.params.id, update, {
+    new: true,
+    runValidators: true,
+    context: 'query',
   })
+    .then((updatedNote) => {
+      if (!updatedNote) {
+        return response.status(404).json({ error: 'note not found' })
+      }
+      response.json(updatedNote)
+    })
+    .catch(next)
 })
 
-// Catch-all handler: send back React's index.html file for client-side routing
-// This should be last, after all API routes and static file serving
-// Use a middleware function instead of wildcard route for Express 5 compatibility
+app.delete('/api/notes/:id', (request, response, next) => {
+  Note.findByIdAndDelete(request.params.id)
+    .then((deletedNote) => {
+      if (!deletedNote) {
+        return response.status(404).json({ error: 'note not found' })
+      }
+      response.status(204).end()
+    })
+    .catch(next)
+})
+
+app.get('/api/info', (request, response, next) => {
+  Note.countDocuments({})
+    .then((count) => {
+      response.send(`Phonebook has info for ${count} people<br>${new Date()}`)
+    })
+    .catch(next)
+})
+
 app.use((request, response, next) => {
-  // Skip if it's an API route
   if (request.path.startsWith('/api')) {
     return next()
   }
-  // For all other GET requests, serve index.html for SPA routing
+
   if (request.method === 'GET') {
     response.sendFile(path.join(__dirname, 'dist', 'index.html'))
   } else {
@@ -109,7 +113,18 @@ app.use((request, response, next) => {
   }
 })
 
-const PORT = process.env.PORT
+const errorHandler = (error, request, response, next) => {
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+
+  console.error(error)
+  return response.status(500).send({ error: 'internal server error' })
+}
+
+app.use(errorHandler)
+
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
