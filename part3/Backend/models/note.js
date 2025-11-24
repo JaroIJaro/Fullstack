@@ -24,7 +24,6 @@ const noteSchema = new mongoose.Schema({
     minlength: 8,
     validate: {
       validator: function(v) {
-        // Check if number has exactly one dash
         const parts = v.split('-')
         if (parts.length !== 2) {
           return false
@@ -32,7 +31,6 @@ const noteSchema = new mongoose.Schema({
         
         const [firstPart, secondPart] = parts
         
-        // First part must be 2 or 3 digits
         if (!/^\d{2,3}$/.test(firstPart)) {
           return false
         }

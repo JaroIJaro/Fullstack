@@ -19,8 +19,16 @@ mongoose.set('strictQuery',false)
 mongoose.connect(url, { family: 4 })
 
 const noteSchema = new mongoose.Schema({
-  name: String,
-  number: String,
+  name: {    
+    type: String,    
+    minLength: 5,    
+    required: true  
+  },
+  number: {    
+    type: String,    
+    minLength: 8,    
+    required: true  
+  }
 })
 
 const Note = mongoose.model('Note', noteSchema)
