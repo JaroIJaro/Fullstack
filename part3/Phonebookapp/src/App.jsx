@@ -55,9 +55,12 @@ const App = () => {
     
       setSuccessMessage( `${newPerson.name} was added`)
       setTimeout(() => setSuccessMessage(null), 5000)
+      .catch(error => {
+        setFailMessage (error.response.data.error)
+        setTimeout(() => setFailMessage(null), 5000)
       })
     }
-  }
+  )}}
   
 
 
